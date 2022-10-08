@@ -1,3 +1,5 @@
+"""Reporting utils for binary classification."""
+
 from typing import NamedTuple
 
 import numpy as np
@@ -59,7 +61,7 @@ class ClassificationReport(NamedTuple):
                               tpr,
                               self.auc,
                               save=save,
-                              **{"name": self.name})
+                              **{'name': self.name})
 
     def report(self):
         conf_matrix = self._repr_conf_matrix()

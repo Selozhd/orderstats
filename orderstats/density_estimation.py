@@ -1,4 +1,4 @@
-"""Experimental. Density estimation for Heavy-tailed distributions."""
+"""Density estimation for Heavy-tailed distributions."""
 
 from functools import partial
 
@@ -10,41 +10,33 @@ from orderstats.tail_estimation import DoubleBootstrap, hills_estimator
 from orderstats.utils import calculate_riemann_sum, estimate_cdf
 
 
-def scotts_rule(sim):
-    """Scott's rule for histogram bin size."""
-    n = len(sim)
-    bin_size = 3.49 * np.std(sim) * n**(-1 / 3)
-    n_bins = (np.max(sim) - np.min(sim)) / bin_size
-    return int(n_bins)
-
-
-def estimate_pdf(X_array, x, n_bins):
+def estimate_pdf(x_array, x, n_bins):
     """Pdf estimate for histogram density estimation.
     E[f(x)] = lim h->0 1/h * [P(X<x+h) - P(X<x)]."""
-    counts, bin_edges = np.histogram(X_array, bins=n_bins)
+    _, bin_edges = np.histogram(x_array, bins=n_bins)
     len_bin = np.diff(bin_edges)[0]
-    density = (1 / len_bin) * (estimate_cdf(X_array, x + len_bin) -
-                               estimate_cdf(X_array, x))
+    density = (1 / len_bin) * (estimate_cdf(x_array, x + len_bin) -
+                               estimate_cdf(x_array, x))
     return density
 
 
-def get_estimation_error(X, x_test, n_bins):
-    """L2 estimation error for histogram denstiy estimate.
+def get_estimation_error(x, x_test, n_bins):
+    r"""L2 estimation error for histogram denstiy estimate.
     L2 error measure is: -2/n \sum_{i=1}^n \hat{f}(x_i) + \int \hat{f}^2(x) dx.
     """
-    counts, bin_edges = np.histogram(X, bins=n_bins)
-    first_term = -2 / len(X) * np.sum(
-        [estimate_pdf(X, x, n_bins) for x in x_test])
+    _, bin_edges = np.histogram(x, bins=n_bins)
+    first_term = -2 / len(x) * np.sum(
+        [estimate_pdf(x, i, n_bins) for i in x_test])
     second_term = np.sum([
-        estimate_pdf(X, x, n_bins)**2 * 0.001
-        for x in np.arange(bin_edges[0], bin_edges[-1], 0.001)
+        estimate_pdf(x, i, n_bins)**2 * 0.001
+        for i in np.arange(bin_edges[0], bin_edges[-1], 0.001)
     ])  ## Start, stop, step
     return first_term + second_term
 
 
 def scotts_factor(n, d=1):
     """
-    D.W. Scott, "Multivariate Density Estimation: Theory, Practice, and 
+    D.W. Scott, "Multivariate Density Estimation: Theory, Practice, and
     Visualization", John Wiley & Sons, New York, Chicester, 1992.
     """
     return np.power(n, -1. / (d + 4))
@@ -79,7 +71,7 @@ class ParetoDensityEstimation:
     The logic presented here does not fully follow the Chapter 3.2 of
     Markovich. Kernel density estimation in particular is taken from `scipy`
     stats.gaussian_kde() function.
-    
+
     Parameters:
         boundary: The boundary point between the non-parametric, parametric
                 estimations.
@@ -87,7 +79,7 @@ class ParetoDensityEstimation:
                         until the boundary point.
     """
 
-    def __init__(self, dataset, bw_method=None, weights=None):
+    def __init__(self, dataset, weights=None):
         self.original_dataset = np.atleast_2d(np.asarray(dataset))
         if not self.original_dataset.size > 1:
             raise ValueError("`dataset` input should have multiple elements.")
@@ -107,7 +99,7 @@ class ParetoDensityEstimation:
                 raise ValueError("`weights` input should be of length n")
             self._neff = 1 / np.sum(self._weights**2)
 
-        self.set_bandwith(bw_method=bw_method)
+        self.set_bandwith()
         self.kernel_scaling = estimate_cdf(self.original_dataset, self.boundary)
 
     def is_in_boundary(self, x):
@@ -161,7 +153,7 @@ class ParetoDensityEstimation:
         if m >= self.n:
             # there are more points than data, so loop over data
             for i in range(self.n):
-                diff = scaled_dataset[:, i, newaxis] - scaled_points
+                diff = scaled_dataset[:, i, np.newaxis] - scaled_points
                 energy = np.sum(diff * diff, axis=0) / 2.0
                 result += self.weights[i] * np.exp(-energy)
         else:
@@ -176,7 +168,7 @@ class ParetoDensityEstimation:
         else:
             return self.parametric_estimate(x)
 
-    def set_bandwith(self, bw_method):
+    def set_bandwith(self):
         self.covariance_factor = scotts_factor
         self._compute_covariance()
 
@@ -186,7 +178,7 @@ class ParetoDensityEstimation:
         """
         self.factor = self.covariance_factor(self.neff, self.d)
         # Cache covariance and inverse covariance of the data
-        if not hasattr(self, '_data_inv_cov'):
+        if not hasattr(self, "_data_inv_cov"):
             self._data_covariance = np.atleast_2d(
                 np.cov(self.dataset,
                        rowvar=1,

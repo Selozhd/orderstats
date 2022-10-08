@@ -1,3 +1,5 @@
+"""Utils."""
+
 import math
 from functools import reduce
 
@@ -48,7 +50,7 @@ def sort_arrays(x, y):
 
 def mix_arrays(arrays, labels=None, axis=0):
     """Concatenates a list of arrays into 2 arrays of id-value pairs.
-    
+
     Example:
         >>> mix_arrays([np.full(3, 3), np.full(3, 1)])
         (array([3, 3, 3, 1, 1, 1]), array([0, 0, 0, 1, 1, 1]))
@@ -57,6 +59,14 @@ def mix_arrays(arrays, labels=None, axis=0):
     ls = [(array, np.full(len(array), idx)) for idx, array in iterator]
     new_arrays, idx = zip(*ls)
     return np.concatenate(new_arrays, axis=axis), np.concatenate(idx, axis=axis)
+
+
+def scotts_rule(sim):
+    """Scott's rule for histogram bin size."""
+    n = len(sim)
+    bin_size = 3.49 * np.std(sim) * n**(-1 / 3)
+    n_bins = (np.max(sim) - np.min(sim)) / bin_size
+    return int(n_bins)
 
 
 # Curve fitting

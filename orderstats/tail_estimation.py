@@ -18,12 +18,33 @@ Most of the code here is taken from the works of:
     >>> double_bootstrap = DoubleBootstrap()
     >>> k_single =  single_bootstrap(1000, cauchy_sample)
     >>> k_double =  double_bootstrap(1000, cauchy_sample)
-    >>> gamma = hills_estimator(cauchy_sample, k_double) 
-"""
+    >>> gamma = hills_estimator(cauchy_sample, k_double)
+"""  # pylint: disable=line-too-long
 
 import numpy as np
 
 from orderstats.plot_utils import plt_plot
+from orderstats.utils import check_sort
+
+
+class NonDecreasingArrayError(Exception):
+    """Raise when an array must be decreasing.
+
+    Only call through `_check_if_decreasing()`.
+    """
+    pass
+
+
+def _check_if_decreasing(array, msg=""):
+    """Raises NonDecreasingArrayError if an array is not decreasing.
+
+    Use this check before expensive calculations.
+    """
+    result = check_sort(np.asarray(array))
+    if result == "decreasing":
+        return
+    else:
+        raise NonDecreasingArrayError(msg)
 
 
 def hills_estimator(X, k):
@@ -49,11 +70,12 @@ def hills_estimator_full(X):
         A numpy array of 1st moments (Hill estimator) corresponding to all
         possible order statistics of the dataset.
     """
+    _check_if_decreasing(X, msg="`X` must be a decreasing array!")
     logs_1 = np.log(X)
     logs_1_cumsum = np.cumsum(logs_1[:-1])
     k_vector = np.arange(1, len(X))
-    M1 = (1. / k_vector) * logs_1_cumsum - logs_1[1:]
-    return M1
+    m1 = (1. / k_vector) * logs_1_cumsum - logs_1[1:]
+    return m1
 
 
 def ratio_estimator(X, x_n):
@@ -79,13 +101,14 @@ def ratio_estimator_vector(X, x_n):
     Returns:
         ratio estimator for x_n.
     """
+    _check_if_decreasing(X, msg="`X` must be a decreasing array!")
     indicator = X > x_n
     return np.sum(np.log(X / x_n) * indicator, axis=1) / np.sum(indicator,
                                                                 axis=1)
 
 
 def get_pickands_possible_indices(n):
-    """Returns an array possible indices for Pickands estimator. 
+    """Returns an array possible indices for Pickands estimator.
     The same indices are used pickands_estimator_vector()."""
     return np.arange(1, int(np.floor(n / 4.)) + 1)
 
@@ -99,7 +122,7 @@ def pickands_estimator(X, k):
         k: k-th index for which the Pickands estimator will be calculated.
     Raises:
         ValueError if value of k does not satisfy, k <= len(X)/4.
-    Returns: 
+    Returns:
         Pickands estimator for k.
     """
     n = len(X)
@@ -118,11 +141,12 @@ def pickands_estimator_vector(X):
         A numpy array of Pickands estimations and the corresponding indices
         in float.
     """
+    _check_if_decreasing(X, msg="`X` must be a decreasing array!")
     indices = get_pickands_possible_indices(len(X))
-    X_k = X[indices - 1]
-    X_2k = X[2 * indices - 1]
-    X_4k = X[4 * indices - 1]
-    pickands_vector = (1. / np.log(2)) * np.log((X_k - X_2k) / (X_2k - X_4k))
+    x_k = X[indices - 1]
+    x_2k = X[2 * indices - 1]
+    x_4k = X[4 * indices - 1]
+    pickands_vector = (1. / np.log(2)) * np.log((x_k - x_2k) / (x_2k - x_4k))
     return pickands_vector
 
 
@@ -162,10 +186,10 @@ def get_double_bootsrap_errors(X):
     logs_1_cumsum = np.cumsum(logs_1[:-1])
     logs_2_cumsum = np.cumsum(logs_2[:-1])
     k_vector = np.arange(1, len(X))
-    M1 = (1. / k_vector) * logs_1_cumsum - logs_1[1:]
-    M2 = (1. / k_vector) * logs_2_cumsum - (
+    m1 = (1. / k_vector) * logs_1_cumsum - logs_1[1:]
+    m2 = (1. / k_vector) * logs_2_cumsum - (
         2. * logs_1[1:] / k_vector) * logs_1_cumsum + logs_2[1:]
-    return (M2 - 2. * M1**2)**2
+    return (m2 - 2. * m1**2)**2
 
 
 def get_indecies_not_nan(X):
@@ -182,6 +206,7 @@ def danielsson_rho(k1, n1):
 def qi_rho(k1, n1):
     rho = (1. - (2 * (np.log(k1) - np.log(n1)) /
                  (np.log(k1))))**(np.log(k1) / np.log(n1) - 1.)
+    return rho
 
 
 def markovich_rho(k1, n1):
@@ -249,13 +274,14 @@ class SingleBootstrap:
     def search_k_opt(self, N, X):
         """Find optimum k value using N samples from X.
 
-        Args: 
+        Args:
             N: Number of bootstrap samples to draw.
             X: A numpy array of decreasing order.
 
         Returns:
             Single bootstrap estimate for the optimal value of k.
         """
+        _check_if_decreasing(X, msg="`X` must be a decreasing array!")
         n = len(X)
         n1 = self.n1(n)
         mse_array = self.bootstrap_step(N, X, n1)
@@ -273,7 +299,7 @@ class DoubleBootstrap:
     Attributes:
         t_bootstrap: Parameter controlling the size of the 2nd bootstrap,
                      defined from n2 = n*(t_bootstrap).
-        eps_sensitivity: parameter controlling range of AMSE minimization. 
+        eps_sensitivity: parameter controlling range of AMSE minimization.
                          Defined as the fraction of order statistics to consider
                          during the AMSE minimization step.
         self.rho_func: rho value used in the estimation of k_opt from k1.
@@ -323,7 +349,7 @@ class DoubleBootstrap:
     def bootstrap_step(self, N, X, n_):
         samples = np.zeros(n_ - 1)
         good_counts = np.zeros(n_ - 1)
-        for i in range(N):
+        for _ in range(N):
             sample = get_bootstrap_sample(X, n_)
             amse = get_double_bootsrap_errors(sample)
             samples += amse
@@ -351,18 +377,19 @@ class DoubleBootstrap:
         k1 = self.get_argmin(n1, k1_averages)
         k2 = self.get_argmin(n2, k2_averages)
         if self.plotting:
-            plot_k1 = self.diagnostic_plots(n1, k1_averages)
-            plot_k1 = self.diagnostic_plots(n2, k2_averages)
+            self.diagnostic_plots(n1, k1_averages)
+            self.diagnostic_plots(n2, k2_averages)
         return k1, k2
 
     def search_k_opt(self, N, X):
         """Iteratively searches for the optimal k for the Hill's estimator.
         Args:
-            N: Number of samples to generate for bootstrapping. 
+            N: Number of samples to generate for bootstrapping.
             X: numpy array of decreasing order.
         Returns:
             Optimal k value.
         """
+        _check_if_decreasing(X, msg="`X` must be a decreasing array!")
         n = len(X)
         n1 = self.n1(n)
         n2 = self.n2(n, n1)
@@ -415,6 +442,7 @@ class RatioBootstrap:
         return k_
 
     def __call__(self, N, X, max_search):
+        _check_if_decreasing(X, msg="`X` must be a decreasing array!")
         n = len(X)
         n1 = self.n1(n)
         samples = get_bootstrap_samples(N, X, self.n1(n))
@@ -428,13 +456,13 @@ def split_into_m(X, m):
     np.random.shuffle(X)
     X = arrange_dims(X, m)
     if X.ndim == 1:
-        V = X.reshape(-1, m)
-        V = np.sort(V)[:, ::-1]  # sort decreasing in the second dim
+        v = X.reshape(-1, m)
+        v = np.sort(v)[:, ::-1]  # sort decreasing in the second dim
     elif X.ndim == 2:
-        N = X.shape[0]
-        V = X.reshape(N, -1, m)
-        V = np.sort(V)[:, :, ::-1]  # sort decreasing in the third dim
-    return V
+        n = X.shape[0]
+        v = X.reshape(n, -1, m)
+        v = np.sort(v)[:, :, ::-1]  # sort decreasing in the third dim
+    return v
 
 
 def arrange_dims(X, m):
@@ -443,10 +471,10 @@ def arrange_dims(X, m):
         zeros = np.zeros(m - last_sample)
         X = np.concatenate([X, zeros])
     elif X.ndim == 2:
-        N = X.shape[0]
+        zero_dim = X.shape[0]
         n = X.shape[1]
         last_sample = n % m
-        zeros = np.zeros((N, int(m - last_sample)))
+        zeros = np.zeros((zero_dim, int(m - last_sample)))
         X = np.concatenate([X, zeros], axis=1)
     return X
 
@@ -474,15 +502,10 @@ def group_estimator(X, m):
         X: A numpy array of decreasing order.
     Returns:
         The estimated gamma value."""
-    V = split_into_m(X, m)
-    z = get_z(V)
+    v = split_into_m(X, m)
+    z = get_z(v)
     gamma = get_gamma(z)
     return gamma
-
-
-def group_estimator_vector(X):
-    ls_m = get_possible_m(len(X))
-    pass
 
 
 class GroupBootstrap:
@@ -491,7 +514,7 @@ class GroupBootstrap:
     Attributes:
         alpha: Parameter controlling the m values in bootstrap samples.
         beta: Parameter for the number of samples in each bootstrap sample.
-        eps_sensitivity: parameter controlling range of MSE minimization. 
+        eps_sensitivity: parameter controlling range of MSE minimization.
                          Defined as the fraction of order statistics to consider
                          during the MSE minimization step.
         min_index: The start of indexes for the candidate m values.
@@ -530,11 +553,12 @@ class GroupBootstrap:
     def bootstrap_step(self, samples, X):
         mse_array = []
         for m in get_possible_m(samples.shape[-1]):
-            V = split_into_m(samples, m)
-            mse_array.append(self.mse(V, X, m))
+            v = split_into_m(samples, m)
+            mse_array.append(self.mse(v, X, m))
         return np.array(mse_array)
 
     def __call__(self, N, X):
+        _check_if_decreasing(X, msg="`X` must be a decreasing array!")
         n = len(X)
         n1 = self.n1(n)
         samples = get_bootstrap_samples(N, X, n1)

@@ -30,7 +30,7 @@ def get_psi(i, n, m):
     return 1 / psi_1
 
 
-def pdf_exp_T_nm(t, n, m):
+def pdf_exp_t_nm(t, n, m):
     """Pdf for the sum of top n-m variables out of n iid exponentials."""
     k = n - m - 1
 
@@ -49,7 +49,7 @@ def pdf_exp_T_nm(t, n, m):
     return first_expr * second_expr * the_sum
 
 
-def f_L(x, n, m):
+def f_l(x, n, m):
     lambdas = [get_lambda(n, i) for i in range(1, m + 2)]
     first_expr = prod(lambdas) / (n - m)
     the_sum = np.sum([

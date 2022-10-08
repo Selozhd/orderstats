@@ -9,7 +9,7 @@ Distribution examples from `scipy.stats`:
     >>>    a=1, scale=1/2
     >>> )  # Gamma distribution with \frac{\beta^\alpha * x^{\alpha -1} e^{-\beta x}}{\Gamma(\alpha)}.
     >>> stats.chi2(df=1)  # Chi-squared distribution with degrees of freedom 1.
-"""
+"""  # pylint: disable=line-too-long
 
 import numpy as np
 from scipy import stats
@@ -21,11 +21,11 @@ def get_selection_vec(n, m):
     return np.concatenate((np.ones(m), np.zeros(n - m)))
 
 
-def calculate_S_m(obs, m):
+def calculate_s_m(obs, m):
     return np.sum(np.take(obs, range(m)))
 
 
-def calculate_T_nm(obs, m):
+def calculate_t_nm(obs, m):
     n = len(obs)
     return np.sum(np.take(obs, range(m, n)))
 
@@ -34,18 +34,18 @@ def calculate_kappa(obs, m):
     n = len(obs)
     obs = np.asarray(obs)
     selection_vec = get_selection_vec(n, m)
-    S_m = 1 / m * obs @ selection_vec
-    T_n_m = 1 / (n - m) * obs @ (1 - selection_vec)
-    return S_m / T_n_m
+    s_m = 1 / m * obs @ selection_vec
+    t_n_m = 1 / (n - m) * obs @ (1 - selection_vec)
+    return s_m / t_n_m
 
 
 def calculate_unscaled_kappa(obs, m):
     n = len(obs)
     obs = np.asarray(obs)
     selection_vec = get_selection_vec(n, m)
-    S_m = obs @ selection_vec
-    T_n_m = obs @ (1 - selection_vec)
-    return S_m / T_n_m
+    s_m = obs @ selection_vec
+    t_n_m = obs @ (1 - selection_vec)
+    return s_m / t_n_m
 
 
 def calculate_asymptotic_stat(obs, k):
@@ -53,9 +53,9 @@ def calculate_asymptotic_stat(obs, k):
     n = len(obs)
     obs = np.asarray(obs)
     selection_vec = get_selection_vec(n, n - k)
-    S_nk = obs @ selection_vec
-    X_k1 = np.take(obs, n - k)
-    asymptotic_stat = S_nk / X_k1
+    s_nk = obs @ selection_vec
+    x_k1 = np.take(obs, n - k)
+    asymptotic_stat = s_nk / x_k1
     return asymptotic_stat
 
 
@@ -68,7 +68,6 @@ def moving_average_kappa(obs):
 
 
 def moving_average_unscaled_kappa(obs):
-    n = len(obs)
     cum_sum = np.cumsum(obs)
     ma_kappa = cum_sum / (cum_sum[-1] - cum_sum)
     return ma_kappa
@@ -78,9 +77,9 @@ def moving_average_asymptotic_stat(obs):
     n = len(obs)
     cum_sum = np.cumsum(obs)
     obs_inc = obs[::-1]
-    X_k1 = np.concatenate((np.take(obs_inc,
+    x_k1 = np.concatenate((np.take(obs_inc,
                                    range(1)), np.take(obs_inc, range(n - 1))))
-    ma_asymptotic_stat = cum_sum[::-1] / X_k1
+    ma_asymptotic_stat = cum_sum[::-1] / x_k1
     return ma_asymptotic_stat
 
 
@@ -118,11 +117,11 @@ def identified_outliers_model(n, lambda_, k, b):
     return outlier_sample
 
 
-class Identified_Outliers_Model:
+class IdentifiedOutliersModel:
     """Identified Outliers Model ease of use with `scipy.stats`."""
 
     def __init__(self, lambda_, k, b):
-        self.name = 'identified_outliers_model'
+        self.name = "identified_outliers_model"
         self.lambda_ = lambda_
         self.k = k
         self.b = b
@@ -133,7 +132,8 @@ class Identified_Outliers_Model:
 
 
 class OrderSimulation:
-    """Simulation of order statistics given distribution and calculation function.
+    """Simulation of order statistics given distribution and calculation
+    function.
 
     Example:
         Here is an example for calculating kappa value for m = 85 in a sequence of
@@ -143,7 +143,7 @@ class OrderSimulation:
 
     Attributes:
         random_variable: scipy.stats random_variable
-        value_calculator: A function that takes an observation 
+        value_calculator: A function that takes an observation
             and a constant and calculates a value. e.g. one of calculate_kappa,
             calculate_S_m, or calculate_T_nm.
     """
@@ -167,9 +167,9 @@ class OrderSimulation:
 
 class MixSimulation:
     """Simulation study of a change point of distributions.
-    
-    dist1, dist2 are functions that takes the number of samples and returns
-    a sample. It is assumed that dist2 has a heavier tail.
+
+    dist1, dist2 are functions that takes the number of samples and
+    returns a sample. It is assumed that dist2 has a heavier tail.
     """
 
     def __init__(self, dist1, dist2):
@@ -178,20 +178,21 @@ class MixSimulation:
 
     def get_mixed_array(self, n1, n2):
         """Mixed sample from `dist1` and `dist2`.
+
         Returns:
             Arrays of shape (n1+n2,) of mixed distributions and of 0, 1 indices
             corresponding to `dist1` and `dist2`.
         """
         x = self.dist1(n1)
         y = self.dist2(n2)
-        X, idx = mix_arrays([x, y])
-        X, idx = sort_arrays(X, idx)
-        return X, idx
+        x_, idx = mix_arrays([x, y])
+        x_, idx = sort_arrays(x_, idx)
+        return x_, idx
 
     def simulate_proportion(self, n1, n2, scoring_func, threshold):
         """Proportion of the heavier tail above the scoring threshold."""
-        X, idx = self.mixed_array(n1, n2)
-        scores = scoring_func(X)
+        x, idx = self.mixed_array(n1, n2)
+        scores = scoring_func(x)
         mask_threshold = scores > threshold
         idx_right = idx[mask_threshold]
         return np.mean(idx_right)

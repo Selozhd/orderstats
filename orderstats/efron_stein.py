@@ -3,7 +3,7 @@
 References:
     [1] Boucheron, S., & Thomas, M. (2012). Concentration inequalities for order statistics.
         Electronic Communications in Probability, 17, 1-12.
-"""
+"""  # pylint: disable=line-too-long
 
 from typing import Callable
 
@@ -12,18 +12,20 @@ import numpy as np
 
 def jackknife_sample(X, col):
     bootstrap_col = np.random.choice(X[:, col], len(X), replace=False)
-    new_X = X.copy()
-    new_X[:, 2] = bootstrap_col
-    return new_X
+    new_x = X.copy()
+    new_x[:, 2] = bootstrap_col
+    return new_x
 
 
 def efron_stein_inequality(X, function):
     """Efron-Stein Inequality for variance.
+
     Args:
         X: dataset
         function: $R^n -> R$
     Returns:
-        Efron-Stein estimation of the variance of Z = function(X)."""
+        Efron-Stein estimation of the variance of Z = function(X).
+    """
     it = (np.mean(np.square(function(X) - function(jackknife_sample(X, col))))
           for col in range(X.shape[1]))
     return np.sum(np.fromiter(it, np.float64))
@@ -40,9 +42,9 @@ def logarithmic_sobolev(X, function, t):
     Upper bound for Ent[e^{t * Z}].
     """
     tau = lambda x: np.exp(x) - x - 1
-    Z = function(X)
-    moment = np.exp(t * Z)
-    it = (np.mean(moment * tau(-t * (Z - function(jackknife_sample(X, col)))))
+    z = function(X)
+    moment = np.exp(t * z)
+    it = (np.mean(moment * tau(-t * (z - function(jackknife_sample(X, col)))))
           for col in range(X.shape[1]))
     return np.sum(np.fromiter(it, np.float64))
 
@@ -70,12 +72,12 @@ def order_statistic_entropy(X, k, t):
                                                   (X[:, k - 2] - X[:, k - 1])))
 
 
-def U_transform(cdf: Callable):
+def u_transform(cdf: Callable):
 
-    def U_function(x):
+    def u_function(x):
         return 1 / (1 - cdf(x))
 
-    return U_function
+    return u_function
 
 
 def hazard_rate(pdf: Callable, cdf: Callable) -> Callable:
@@ -94,12 +96,12 @@ def hazard_rate(pdf: Callable, cdf: Callable) -> Callable:
 
 def renyi_representation(n, alpha=1):
     """Renyi's Representation for n i.i.d exponentials with mean alpha."""
-    X = np.random.exponential(alpha, n)
-    X = np.concatenate((np.zeros(1), X))
-    X = np.diff(np.sort(X))
-    Y = X * np.arange(1, n + 1, 1)[::-1]
-    renyi_representation = np.cumsum(Y / np.arange(1, n + 1, 1)[::-1])
-    return X, Y, renyi_representation
+    x = np.random.exponential(alpha, n)
+    x = np.concatenate((np.zeros(1), x))
+    x = np.diff(np.sort(x))
+    y = x * np.arange(1, n + 1, 1)[::-1]
+    renyi_rep = np.cumsum(y / np.arange(1, n + 1, 1)[::-1])
+    return x, y, renyi_rep
 
 
 def generalized_renyi_statistic(Z):

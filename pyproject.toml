@@ -1,3 +1,53 @@
+[project]
+name = "orderstats"
+description = "Research repository on outlier detection and analysis of heavy-tailed distributions."
+readme = "README.md"
+requires-python = ">=3.7"
+license = {file = "LICENSE"}
+authors = [{name = "Ahmet Zahid Balcıoğlu"}, {name = "Oğuz Gürerk"]}]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = [
+    "order statistics",
+    "outliers",
+    "outlier analysis",
+    "anomaly detection",
+    "pareto distribution",
+    "heavy-tailed distributions",
+    "visualization",
+    "simulation",
+]
+
+dependencies = [
+    "dataclass_array",
+    "matplotlib",
+    "numpy",
+    "scipy",
+]
+
+dynamic = ["version"]
+
+[project.urls]
+homepage = "https://github.com/Selozhd/orderstats"
+repository = "https://github.com/Selozhd/orderstats"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=3.4",
+    # Development deps (linting, formating,...)
+    "pylint>=2.6.0",
+    "yapf",
+]
+
 [build-system]
+requires = ["flit_core >=3.5,<4"]
+
+build-backend = "flit_core.buildapi"
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
