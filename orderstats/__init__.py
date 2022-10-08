@@ -15,4 +15,4 @@ from orderstats.tail_estimation import DoubleBootstrap
 from orderstats.tail_estimation import GroupBootstrap
 from orderstats.tail_estimation import SingleBootstrap
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"

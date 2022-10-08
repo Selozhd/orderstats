@@ -4,7 +4,7 @@ description = "Research repository on outlier detection and analysis of heavy-ta
 readme = "README.md"
 requires-python = ">=3.7"
 license = {file = "LICENSE"}
-authors = [{name = "Ahmet Zahid Balcıoğlu"}, {name = "Oğuz Gürerk"]}]
+authors = [{name = "Ahmet Zahid Balcıoğlu"}, {name = "Oğuz Gürerk"}]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
@@ -47,7 +47,4 @@ dev = [
 
 [build-system]
 requires = ["flit_core >=3.5,<4"]
-
 build-backend = "flit_core.buildapi"
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
