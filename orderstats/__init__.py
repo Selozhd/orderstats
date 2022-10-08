@@ -1,7 +1,5 @@
 """Public API."""
 
-from constants import PLOTTING_STYLE
-
 from orderstats import density_estimation
 from orderstats import plot_utils
 from orderstats import scoring
@@ -15,4 +13,6 @@ from orderstats.tail_estimation import DoubleBootstrap
 from orderstats.tail_estimation import GroupBootstrap
 from orderstats.tail_estimation import SingleBootstrap
 
-__version__ = "0.1.1"
+PLOTTING_STYLE = ["science", "ieee"]
+
+__version__ = "0.1.2"

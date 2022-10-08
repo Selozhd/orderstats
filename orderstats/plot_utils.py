@@ -4,11 +4,11 @@ import functools
 
 import numpy as np
 import pandas as pd
-from constants import PLOTTING_STYLE
 from matplotlib import patches
 from matplotlib import pyplot as plt
 from sklearn.metrics import RocCurveDisplay
 
+from orderstats import PLOTTING_STYLE
 from orderstats.utils import scotts_rule
 
 
