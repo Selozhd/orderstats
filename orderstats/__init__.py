@@ -13,6 +13,4 @@ from orderstats.tail_estimation import DoubleBootstrap
 from orderstats.tail_estimation import GroupBootstrap
 from orderstats.tail_estimation import SingleBootstrap
 
-PLOTTING_STYLE = ["science", "ieee"]
-
-__version__ = "0.1.2"
+__version__ = "0.1.3"

@@ -8,8 +8,9 @@ from matplotlib import patches
 from matplotlib import pyplot as plt
 from sklearn.metrics import RocCurveDisplay
 
-from orderstats import PLOTTING_STYLE
 from orderstats.utils import scotts_rule
+
+PLOTTING_STYLE = 'default'
 
 
 def _save_or_show(filepath):
